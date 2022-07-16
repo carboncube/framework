@@ -213,10 +213,11 @@ class Builder
      * @param  \Illuminate\Database\Query\Processors\Processor  $processor
      * @return void
      */
-    public function __construct(ConnectionInterface $connection,
-                                Grammar $grammar = null,
-                                Processor $processor = null)
-    {
+    public function __construct(
+        ConnectionInterface $connection,
+        Grammar $grammar = null,
+        Processor $processor = null
+    ) {
         $this->connection = $connection;
         $this->grammar = $grammar ?: $connection->getQueryGrammar();
         $this->processor = $processor ?: $connection->getPostProcessor();
@@ -280,7 +281,7 @@ class Builder
             throw new InvalidArgumentException;
         }
 
-        return $this->selectRaw('('.$query.') as '.$this->grammar->wrap($as), $bindings);
+        return $this->selectRaw('(' . $query . ') as ' . $this->grammar->wrap($as), $bindings);
     }
 
     /**
@@ -356,7 +357,11 @@ class Builder
             $join = new JoinClause($type, $table);
 
             $this->joins[] = $join->on(
-                $one, $operator, $two, 'and', $where
+                $one,
+                $operator,
+                $two,
+                'and',
+                $where
             );
 
             $this->addBinding($join->bindings, 'join');
@@ -513,8 +518,10 @@ class Builder
         // If the given operator is not found in the list of valid operators we will
         // assume that the developer is just short-cutting the '=' operators and
         // we will set the operators to '=' and set the values appropriately.
-        if (! in_array(strtolower($operator), $this->operators, true) &&
-            ! in_array(strtolower($operator), $this->grammar->getOperators(), true)) {
+        if (
+            !in_array(strtolower($operator), $this->operators, true) &&
+            !in_array(strtolower($operator), $this->grammar->getOperators(), true)
+        ) {
             list($value, $operator) = [$operator, '='];
         }
 
@@ -543,7 +550,7 @@ class Builder
 
         $this->wheres[] = compact('type', 'column', 'operator', 'value', 'boolean');
 
-        if (! $value instanceof Expression) {
+        if (!$value instanceof Expression) {
             $this->addBinding($value, 'where');
         }
 
@@ -582,7 +589,7 @@ class Builder
     {
         $isOperator = in_array($operator, $this->operators);
 
-        return is_null($value) && $isOperator && ! in_array($operator, ['=', '<>', '!=']);
+        return is_null($value) && $isOperator && !in_array($operator, ['=', '<>', '!=']);
     }
 
     /**
@@ -619,8 +626,10 @@ class Builder
         // If the given operator is not found in the list of valid operators we will
         // assume that the developer is just short-cutting the '=' operators and
         // we will set the operators to '=' and set the values appropriately.
-        if (! in_array(strtolower($operator), $this->operators, true) &&
-            ! in_array(strtolower($operator), $this->grammar->getOperators(), true)) {
+        if (
+            !in_array(strtolower($operator), $this->operators, true) &&
+            !in_array(strtolower($operator), $this->grammar->getOperators(), true)
+        ) {
             list($second, $operator) = [$operator, '='];
         }
 
@@ -874,7 +883,7 @@ class Builder
     {
         $type = $not ? 'NotExists' : 'Exists';
 
-        $this->wheres[] = compact('type', 'operator', 'query', 'boolean');
+        $this->wheres[] = compact('type', 'query', 'boolean');
 
         $this->addBinding($query->getBindings(), 'where');
 
@@ -896,7 +905,10 @@ class Builder
 
         if ($values instanceof static) {
             return $this->whereInExistingQuery(
-                $column, $values, $boolean, $not
+                $column,
+                $values,
+                $boolean,
+                $not
             );
         }
 
@@ -1256,7 +1268,7 @@ class Builder
 
         $this->havings[] = compact('type', 'column', 'operator', 'value', 'boolean');
 
-        if (! $value instanceof Expression) {
+        if (!$value instanceof Expression) {
             $this->addBinding($value, 'having');
         }
 
@@ -1454,13 +1466,13 @@ class Builder
     public function forPageAfterId($perPage = 15, $lastId = 0, $column = 'id')
     {
         $this->orders = Collection::make($this->orders)
-                ->reject(function ($order) use ($column) {
-                    return $order['column'] === $column;
-                })->values()->all();
+            ->reject(function ($order) use ($column) {
+                return $order['column'] === $column;
+            })->values()->all();
 
         return $this->where($column, '>', $lastId)
-                    ->orderBy($column, 'asc')
-                    ->take($perPage);
+            ->orderBy($column, 'asc')
+            ->take($perPage);
     }
 
     /**
@@ -1607,7 +1619,7 @@ class Builder
      */
     protected function runSelect()
     {
-        return $this->connection->select($this->toSql(), $this->getBindings(), ! $this->useWritePdo);
+        return $this->connection->select($this->toSql(), $this->getBindings(), !$this->useWritePdo);
     }
 
     /**
@@ -1711,7 +1723,7 @@ class Builder
     {
         return array_map(function ($column) {
             return is_string($column) && ($aliasPosition = strpos(strtolower($column), ' as ')) !== false
-                    ? substr($column, 0, $aliasPosition) : $column;
+                ? substr($column, 0, $aliasPosition) : $column;
         }, $columns);
     }
 
@@ -1746,7 +1758,9 @@ class Builder
         }
 
         return $this->connection->cursor(
-            $this->toSql(), $this->getBindings(), ! $this->useWritePdo
+            $this->toSql(),
+            $this->getBindings(),
+            !$this->useWritePdo
         );
     }
 
@@ -1794,7 +1808,7 @@ class Builder
 
         $results = $this->forPageAfterId($count, 0, $column)->get();
 
-        while (! empty($results)) {
+        while (!empty($results)) {
             if (call_user_func($callback, $results) === false) {
                 return false;
             }
@@ -1898,7 +1912,7 @@ class Builder
     {
         $sql = $this->grammar->compileExists($this);
 
-        $results = $this->connection->select($sql, $this->getBindings(), ! $this->useWritePdo);
+        $results = $this->connection->select($sql, $this->getBindings(), !$this->useWritePdo);
 
         if (isset($results[0])) {
             $results = (array) $results[0];
@@ -1917,7 +1931,7 @@ class Builder
      */
     public function count($columns = '*')
     {
-        if (! is_array($columns)) {
+        if (!is_array($columns)) {
             $columns = [$columns];
         }
 
@@ -2026,7 +2040,7 @@ class Builder
     {
         $result = $this->aggregate($function, $columns);
 
-        if (! $result) {
+        if (!$result) {
             return 0;
         }
 
@@ -2056,7 +2070,7 @@ class Builder
         // Since every insert gets treated like a batch insert, we will make sure the
         // bindings are structured in a way that is convenient for building these
         // inserts statements by verifying the elements are actually an array.
-        if (! is_array(reset($values))) {
+        if (!is_array(reset($values))) {
             $values = [$values];
         }
 
@@ -2133,7 +2147,7 @@ class Builder
      */
     public function updateOrInsert(array $attributes, array $values = [])
     {
-        if (! $this->where($attributes)->exists()) {
+        if (!$this->where($attributes)->exists()) {
             return $this->insert(array_merge($attributes, $values));
         }
 
@@ -2150,7 +2164,7 @@ class Builder
      */
     public function increment($column, $amount = 1, array $extra = [])
     {
-        if (! is_numeric($amount)) {
+        if (!is_numeric($amount)) {
             throw new InvalidArgumentException('Non-numeric value passed to increment method.');
         }
 
@@ -2171,7 +2185,7 @@ class Builder
      */
     public function decrement($column, $amount = 1, array $extra = [])
     {
-        if (! is_numeric($amount)) {
+        if (!is_numeric($amount)) {
             throw new InvalidArgumentException('Non-numeric value passed to decrement method.');
         }
 
@@ -2193,7 +2207,7 @@ class Builder
         // If an ID is passed to the method, we will set the where clause to check
         // the ID to allow developers to simply and quickly remove a single row
         // from their database without manually specifying the where clauses.
-        if (! is_null($id)) {
+        if (!is_null($id)) {
             $this->where('id', '=', $id);
         }
 
@@ -2247,7 +2261,7 @@ class Builder
     protected function cleanBindings(array $bindings)
     {
         return array_values(array_filter($bindings, function ($binding) {
-            return ! $binding instanceof Expression;
+            return !$binding instanceof Expression;
         }));
     }
 
@@ -2293,7 +2307,7 @@ class Builder
      */
     public function setBindings(array $bindings, $type = 'where')
     {
-        if (! array_key_exists($type, $this->bindings)) {
+        if (!array_key_exists($type, $this->bindings)) {
             throw new InvalidArgumentException("Invalid binding type: {$type}.");
         }
 
@@ -2313,7 +2327,7 @@ class Builder
      */
     public function addBinding($value, $type = 'where')
     {
-        if (! array_key_exists($type, $this->bindings)) {
+        if (!array_key_exists($type, $this->bindings)) {
             throw new InvalidArgumentException("Invalid binding type: {$type}.");
         }
 
